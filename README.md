@@ -1,157 +1,323 @@
-Advanced reCAPTCHA v3 Human Emulation with Playwright
-A sophisticated Python script that simulates human-like behavior to interact with reCAPTCHA v3 test pages. This project demonstrates advanced browser automation techniques including realistic mouse movements, random delays, and stealth configurations.
+# Human-Like reCAPTCHA v3 Interaction Tester
 
-📋 Features
-Realistic Mouse Movements: Uses Bezier curves to simulate natural human mouse paths
+This project demonstrates how browser automation can simulate **human-like interaction patterns** in order to evaluate **Google reCAPTCHA v3 scoring behavior**.
 
-Stealth Configuration: Multiple browser fingerprint modifications to avoid detection
+The script uses **Playwright** and implements several techniques that mimic real user behavior such as:
 
-Human-like Behavior: Random delays, scrolling patterns, and interaction sequences
+* Human-like mouse movement using **Bezier curves**
+* Randomized interaction timing
+* Browser fingerprint masking
+* Natural scrolling and cursor positioning
+* Realistic click targeting
 
-reCAPTCHA v3 Testing: Specifically designed for reCAPTCHA v3 test pages
+The goal is to analyze how these behaviors affect the **reCAPTCHA v3 score** returned by the verification endpoint.
 
-Score Analysis: Returns the reCAPTCHA score for performance evaluation
+---
 
-🚀 Quick Start
-Prerequisites
-Python 3.7+
+# Overview
 
-Playwright
+Google reCAPTCHA v3 assigns a **risk score** between:
 
-Installation
-bash
-# Clone the repository
-git clone https://github.com/ahmedelseseiy/recaptcha-human-emulation.git
-cd recaptcha-human-emulation
+```
+0.0 → very likely bot
+1.0 → very likely human
+```
 
-# Install dependencies
-pip install playwright
-playwright install chromium
-Usage
-bash
-python recaptcha_human_emulation.py
-📁 Project Structure
-text
-recaptcha-human-emulation/
-│
-├── recaptcha_human_emulation.py    # Main script
-├── README.md                        # Documentation
-├── requirements.txt                  # Dependencies
-└── .gitignore                        # Git ignore file
-requirements.txt
-text
-playwright>=1.40.0
-🔧 How It Works
-The script uses Playwright to control a Chromium browser with multiple stealth techniques:
+Instead of solving a challenge, the system evaluates behavioral signals such as:
 
-Browser Launch: Starts Chromium with automation-disabling flags
+* Mouse movement
+* Timing between actions
+* Browser fingerprint
+* Interaction patterns
+* Network reputation
 
-Fingerprint Modification: Injects JavaScript to modify browser properties
+This script reproduces these signals to test how they influence the returned score.
 
-Human Emulation: Simulates mouse movements using Bezier curves
+---
 
-Interaction: Navigates to the target page and clicks the reCAPTCHA button
+# Features
 
-Score Retrieval: Parses and displays the reCAPTCHA v3 score
+### Human-like Mouse Movement
 
-📊 Understanding reCAPTCHA Scores
-reCAPTCHA v3 returns a score between 0.0 and 1.0:
+The script generates cursor paths using **Bezier curves**, which resemble real human hand movement instead of linear bot movement.
 
-Score Range	Interpretation
-0.9 - 1.0	Very likely human
-0.7 - 0.9	Likely human
-0.3 - 0.7	Suspicious
-0.0 - 0.3	Likely bot
-🎯 Factors That Influence the Score
-Parameters That IMPROVE the Score ✓
-Parameter	Implementation	Impact
-Realistic Mouse Movement	Bezier curves with control points	High
-Random Delays	time.sleep(random.uniform(0.003, 0.01))	Medium
-Browser Fingerprint	Modified navigator properties	High
-WebGL Fingerprint	Custom GPU vendor strings	Medium
-Viewport Size	Maximized window	Low
-Interaction Timing	Variable delays between actions	Medium
-Parameters That LOWER the Score ✗
-Parameter	Why It's Detected	Avoidance
-Direct Clicking	No mouse movement between points	Always use Bezier curves
-Fixed Delays	Predictable timing patterns	Use random.uniform()
-Missing Chrome Object	window.chrome is undefined	Add chrome.runtime
-navigator.webdriver	Flag set to true	Override to undefined
-Plugins Array	Empty in headless browsers	Populate with realistic values
-Languages Array	Too few or unnatural	Use ['en-US', 'en', 'ar']
-Hardware Concurrency	Often 2 in VMs	Set to 4-8
-Device Memory	Often undefined	Set to 4-8 GB
-Platform	Headless gives different values	Set to 'Win32'
-🛠️ Key Stealth Techniques Explained
-1. WebDriver Concealment
-javascript
+Key function:
+
+```
+bezier_curve(start, end, control1, control2)
+```
+
+It generates a smooth path between two points with random control points.
+
+---
+
+### Randomized Behavior
+
+The script introduces randomness in several areas:
+
+* Mouse movement paths
+* Delay between actions
+* Scroll distance
+* Click position inside the button
+
+This prevents deterministic automation patterns.
+
+Example:
+
+```
+time.sleep(random.uniform(0.5, 1.5))
+```
+
+---
+
+### Browser Fingerprint Masking
+
+The script modifies browser properties to resemble a normal Chrome browser.
+
+Examples:
+
+* `navigator.webdriver` removed
+* Realistic `navigator.plugins`
+* Realistic `navigator.languages`
+* Hardware properties
+* WebGL GPU vendor
+
+Example snippet:
+
+```
 Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-2. Chrome Object Emulation
-javascript
-window.chrome = { runtime: {}, app: {}, csi: function() {}, loadTimes: function() {} };
-3. Plugin Array Simulation
-javascript
-Object.defineProperty(navigator, 'plugins', {get: () => [
-    {name: 'Chrome PDF Plugin'},
-    {name: 'Chrome PDF Viewer'},
-    {name: 'Native Client'}
-]});
-4. WebGL Fingerprinting
-javascript
-const getParameter = WebGLRenderingContext.prototype.getParameter;
-WebGLRenderingContext.prototype.getParameter = function(parameter) {
-    if (parameter === 37445) return 'Intel Inc.';
-    if (parameter === 37446) return 'Intel UHD Graphics';
-    return getParameter(parameter);
-};
-5. Bezier Curve Mouse Movement
-python
-def bezier_curve(start, end, control1, control2, steps=40):
-    points = []
-    for i in range(steps):
-        t = i / steps
-        x = (1-t)**3 * start[0] + 3*(1-t)**2*t * control1[0] + 3*(1-t)*t**2 * control2[0] + t**3 * end[0]
-        y = (1-t)**3 * start[1] + 3*(1-t)**2*t * control1[1] + 3*(1-t)*t**2 * control2[1] + t**3 * end[1]
-        points.append((x, y))
-    return points
-📈 Performance Optimization Tips
-Increase Randomness: Vary delay ranges and movement patterns
+```
 
-Session Rotation: Close and restart browsers periodically
+---
 
-IP Rotation: Use proxies for distributed testing
+### Human-like Clicking
 
-Browser Profile: Use persistent contexts with real user data
+Instead of clicking the center of the button every time, the script clicks **a random point inside the button**.
 
-Timing Variations: Add longer pauses between actions (2-5 seconds)
+```
+x = box['x'] + box['width'] * random.uniform(0.3, 0.7)
+y = box['y'] + box['height'] * random.uniform(0.3, 0.7)
+```
 
-⚠️ Legal and Ethical Considerations
-This tool is for educational purposes only. Always:
+This mimics natural user behavior.
 
-Respect website terms of service
+---
 
-Check robots.txt before scraping
+# How the Score is Collected
 
-Implement rate limiting
+After clicking the button:
 
-Use ethically and responsibly
+```
+result = page.locator("#out").text_content()
+score = json.loads(result).get('google_response', {}).get('score')
+```
 
-Comply with local laws and regulations
+The script extracts the **reCAPTCHA v3 score** from the JSON response printed on the page.
 
-🤝 Contributing
-Contributions are welcome! Feel free to:
+Example output:
 
-Open issues for bugs or suggestions
+```
+0.9
+```
 
-Submit pull requests with improvements
+---
 
-Share your test results and findings
+# Parameters That Affect reCAPTCHA Score
 
-📝 License
-MIT License - see LICENSE file for details
+Several behavioral and environment parameters influence the score.
 
-🙏 Acknowledgments
-Playwright team for the excellent automation framework
+## 1 Mouse Movement Quality
+
+Function:
+
+```
+human_mouse_move()
+```
+
+Important parameter:
+
+```
+steps=40
+```
+
+Higher steps → smoother movement → more human-like.
+
+Lower steps → robotic movement → lower score.
+
+---
+
+## 2 Timing Between Actions
+
+Example:
+
+```
+time.sleep(random.uniform(2,4))
+```
+
+More natural delays typically increase the score.
+
+Very fast execution may reduce the score.
+
+---
+
+## 3 Interaction Count
+
+The script performs multiple mouse movements before clicking:
+
+```
+for _ in range(random.randint(2,3)):
+```
+
+More interaction signals → higher trust.
+
+---
+
+## 4 Scroll Behavior
+
+```
+window.scrollTo(...)
+```
+
+Scrolling is a strong signal that the user is actively browsing.
+
+No scrolling may reduce score.
+
+---
+
+## 5 Click Accuracy
+
+Instead of clicking the exact center:
+
+```
+random.uniform(0.3, 0.7)
+```
+
+This simulates human hand imprecision.
+
+Bots often click exact coordinates.
+
+---
+
+## 6 Browser Fingerprint
+
+Modified properties include:
+
+* `navigator.webdriver`
+* `navigator.plugins`
+* `navigator.languages`
+* `hardwareConcurrency`
+* `deviceMemory`
+* WebGL vendor
+
+These reduce bot detection.
+
+---
+
+# How to Increase the Score
+
+To achieve higher scores:
+
+### Increase movement complexity
+
+```
+steps = 60
+```
+
+### Add more user activity
+
+```
+for _ in range(5):
+```
+
+### Add longer delays
+
+```
+sleep 3–6 seconds
+```
+
+### Simulate more interactions
+
+* extra scrolling
+* hovering elements
+* clicking non-critical UI elements
+
+### Use residential proxies or real IP addresses
+
+Network reputation significantly affects reCAPTCHA scoring.
+
+---
+
+# How to Lower the Score (Bot Simulation)
+
+To simulate bot-like behavior:
+
+### Remove mouse movement
+
+Click instantly.
+
+### Reduce delays
+
+```
+sleep(0)
+```
+
+### Use headless browser
+
+```
+headless=True
+```
+
+### Disable scrolling
+
+### Use linear mouse movement
+
+```
+page.mouse.move(x,y)
+```
+
+These patterns often produce scores close to **0.1**.
+
+---
+
+# Requirements
+
+Install dependencies:
+
+```
+pip install playwright
+playwright install
+```
+
+---
+
+# Run the Script
+
+```
+python script.py
+```
+
+The script will:
+
+1. Launch the browser
+2. Simulate human interaction
+3. Click the verification button
+4. Print the returned score
+
+Example output:
+
+```
+0.9
+```
+
+---
+
+# Disclaimer
+
+This project is intended **only for research and testing purposes** to understand how behavioral signals affect **reCAPTCHA v3 scoring**.
+It should not be used to bypass or abuse CAPTCHA protections.
+
+---
+
 
 reCAPTCHA for providing the test page
 
